@@ -18,6 +18,10 @@
 void setup()
 {
     Serial.begin(115200);
+    strcpy(listenTopic, hostname);
+    strcpy(publishTopic, hostname);
+    strcat(listenTopic, "/conf");
+    strcat(publishTopic, "/daten");
     WiFi.mode(WIFI_OFF);
     WiFi.forceSleepBegin();
     delay(1);
@@ -34,12 +38,12 @@ void setup()
     }
 
     client.disconnect(); //eventuell vorhandene Alte Verbindung löschen
-    humidity = doc.createNestedObject("Luftfeuchte");
-    pressure = doc.createNestedObject("Luftdruck");
-    temperature = doc.createNestedObject("Temperatur");
-    battery = doc.createNestedObject("Batterie");
-    powerSupply = doc.createNestedObject("Power");
-    otaStatus = doc.createNestedObject("OTA-Status");
+    humidity = doc.createNestedObject("RH");
+    pressure = doc.createNestedObject("p");
+    temperature = doc.createNestedObject("T");
+    battery = doc.createNestedObject("V_Bat");
+    powerSupply = doc.createNestedObject("V_3V3");
+    otaStatus = doc.createNestedObject("OTA");
     humidity["u"] = "%";
     pressure["u"] = "hPa";
     temperature["u"] = "°C";
@@ -61,6 +65,7 @@ void setup()
     IPAddress dns(staticDNS);
     WiFi.config(ip, dns, gateway, subnet);
 #endif
+
     if (rtcValid)
     {
         // The RTC data was good, make a quick connection
@@ -115,7 +120,6 @@ void setup()
         delay(50);
         wifiStatus = WiFi.status();
     }
-    Serial.println("");
     Serial.println("WiFi connected");
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
@@ -123,19 +127,22 @@ void setup()
     memcpy(rtcData.ap_mac, WiFi.BSSID(), 6); // Copy 6 bytes of BSSID (AP's MAC address)
     rtcData.crc32 = calculateCRC32(((uint8_t *)&rtcData) + 4, sizeof(rtcData) - 4);
     ESP.rtcUserMemoryWrite(0, (uint32_t *)&rtcData, sizeof(rtcData));
-    otaEnabled = checkOTA(); //Überprüfung, ob wifi an bleiben soll
-
     Serial.println(msg);
     client.setServer(IPAddress(MQTT_BROKER), 1883); //MQTT-Server definieren
     client.setCallback(callback);                   //Funktion definieren, die aufgerufen wird, wenn eine abbonierte nachricht ankommt
 
-    if (client.connect(hostName))
+    if (client.connect(hostname))
     {
         Serial.println("MQTT verbunden");
-        //client.publish(publishTopic, msg);
+        Serial.println(listenTopic);
+        client.subscribe(listenTopic);
+        delay(10);
+        client.loop();
         sendData();
-        Serial.printf("%s gesendet in Topic: %s \n", msg, publishTopic);
+        //Serial.printf("%s gesendet in Topic: %s \n", msg, publishTopic);
         Serial.println("MQTT gesendet");
+        delay(10);
+        client.loop();
     }
 
     if (otaEnabled)
@@ -144,10 +151,10 @@ void setup()
         // ArduinoOTA.setPort(8266);
 
         // Hostname defaults to esp8266-[ChipID]
-        ArduinoOTA.setHostname(hostName);
+        ArduinoOTA.setHostname(hostname);
 
         // No authentication by default
-        ArduinoOTA.setPassword((const char *)hostName);
+        ArduinoOTA.setPassword((const char *)hostname);
 
         ArduinoOTA.begin();
     }
@@ -170,7 +177,6 @@ void loop()
     // if enough millis have elapsed
     if ((currentMillis - previousMillis[0] >= sleepTime))
     {
-        otaEnabled = checkOTA();
         if (sensorsConnected)
         {
             readSensors();
@@ -196,23 +202,9 @@ void loop()
 void callback(char *topic, byte *payload, unsigned int length)
 {
     deserializeJson(incomeDoc, payload, length);
-}
-
-boolean checkOTA()
-{
-    HTTPClient http;
-    if (http.begin(ethClient, httpServerWiFi))
-    {
-        http.GET();
-        String s = http.getString();
-        char payload[s.length() + 1];
-        strcpy(payload, s.c_str()); // or pass &s[0]
-        byte tmp = strcasecmp((char *)payload, "true");
-        return (tmp == 0);
-    }
-    else
-    {
-        return true;
+    if(incomeDoc.containsKey("OTA")){
+        otaEnabled=incomeDoc["OTA"];
+        Serial.printf("OTA-Status gesetzt auf: %s \n", otaEnabled ? "true" : "false");
     }
 }
 
@@ -231,22 +223,16 @@ void sendData()
 {
     otaStatus["v"] = otaEnabled;
     serializeJson(doc, msg);
-    Serial.printf("Stringlänge: %d;\n zeichen nach länge:%d", strlen(msg), msg[strlen(msg) - 1]);
+    //Serial.printf("Stringlänge: %d;\n zeichen nach länge:%d", strlen(msg), msg[strlen(msg) - 1]);
     client.beginPublish(publishTopic, strlen(msg), true);
     for (byte i = 0; i < strlen(msg); i++)
     {
         client.write(msg[i]);
         yield();
     }
-    Serial.println("");
+    //Serial.println("");
     client.endPublish();
     delay(100);
-}
-
-float voltageMesure()
-{
-    float adc = (float)analogRead(A0);
-    return vFactor3 * pow(adc, 3) + vFactor2 * pow(adc, 3) + vFactor1 * adc + vFactor0;
 }
 
 uint32_t calculateCRC32(const uint8_t *data, size_t length)

@@ -3,23 +3,32 @@
  * @author Pingoin (p.drente@gmx.de)
  * @brief Gesammelte Einstellungen
  * @version 0.1
- * @date 2019-08-25
+ * @date 2019-12-03
  * 
  * @copyright Copyright (c) 2019
  * 
  */
+
+//Auskommentieren, wenn keine Private.h existiert und WIFI Daten direkt eingertagen werden
 #include <private.h>
 
 /**
- * @brief Netzwerk SSID
+ * @brief Netzwerk SSID Angabe in Anführungszeichen: "SSID"
  */
 #define SSID mySSID
 
 /**
- * @brief WPA-Passwort
+ * @brief WPA-Passwort Angabe in Anführungszeichen: "Passwort"
  * 
  */
 #define PSK myPSK
+
+/**
+ * @brief Bezeichnung des Controllers
+ * 
+ * Wird benutzt als bezeichnung für MQTT und OTA
+ */
+#define hostname  "Raumsensor"
 
 /**
  * @brief Adresse des MQTT-Brokers
@@ -34,7 +43,7 @@
  * Wenn DHCP-Benutzt wird bitte auskommentieren
  * Angabe in den Byte-Gruppen getrennt durch komma (z.B.: 192,168,178,111)
  */
-#define staticIP 192, 168, 178, 188
+#define staticIP 192, 168, 178, 190
 
 /**
  * @brief Gateway des MCU
@@ -61,18 +70,6 @@
 #define staticDNS 192, 178, 168, 1
 
 /**
- * @brief das MQTT-Topic auf das gewartet wird
- * 
- */
-#define listenTopic "sensors/BME280"
-
-/**
- * @brief MQTT-Topic, in dem die Daten veröffentlicht werden
- * 
- */
-#define publishTopic "wetter/daten"
-
-/**
  * @brief i2CAdresse des BME280
  * 
  */
@@ -86,20 +83,7 @@
 #define sleepTime 5*60e3
 
 /**
- * @brief Bezeihnung des Controllers
- * 
- * Wird benutzt als bezeichnung für MQTT und OTA
- */
-#define hostName "Wetterstation"
-
-/**
  * @brief 
  * 
  */
 #define httpServerWiFi "http://192.168.178.110:1880/wettersensor"
-
-/**
- * @brief Faktor für Spannugnsberechnung
- * 
- */
-#define analogFactor 1 //0.00478125
