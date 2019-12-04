@@ -78,7 +78,7 @@ void setup()
     }
 
     //Sensoren lesen
-    Wire.begin();
+    Wire.begin(5,4);
     ads.setGain(FSR4096);
 
     if (bme.begin(bme280I2C))
