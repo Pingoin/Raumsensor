@@ -59,7 +59,6 @@ build
 .vscode
 search
 html
-/lib
 /include/private.h
 GErber
 *.kicad_pcb-bak

@@ -10,18 +10,18 @@
  */
 
 //Auskommentieren, wenn keine Private.h existiert und WIFI Daten direkt eingertagen werden
-#include <private.h>
+//#include <private.h>
 
 /**
  * @brief Netzwerk SSID Angabe in Anführungszeichen: "SSID"
  */
-#define SSID mySSID
+#define SSID "mySSID"
 
 /**
  * @brief WPA-Passwort Angabe in Anführungszeichen: "Passwort"
  * 
  */
-#define PSK myPSK
+#define PSK "myPSK"
 
 /**
  * @brief Bezeichnung des Controllers

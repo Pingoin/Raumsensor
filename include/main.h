@@ -15,10 +15,7 @@
 #include <PubSubClient.h>
 #include <Wire.h>
 #include <Adafruit_BME280.h>
-#include <string.h>
 #include <ArduinoOTA.h>
-#include <esp8266httpclient.h>
-#include <user_interface.h>
 #include <ArduinoJson.h>
 #include <ads111x.h>
 /**
